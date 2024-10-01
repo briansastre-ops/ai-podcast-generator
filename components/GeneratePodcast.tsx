@@ -4,19 +4,51 @@ import { Label } from './ui/label'
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from './ui/button';
 import { Loader } from 'lucide-react';
+import { useAction } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { generateAudioAction } from '../convex/openai';
 
 
+const useGeneratePodcast = ({
+  setAudio, voiceType, voicePrompt, setAudioStorageId
+}: GeneratePodcastProps) => {
+  const [isGenerating, setIsGenerating] = useState(false);
 
-const GeneratePodcast = ({
-    GeneratePodcast,
-    setAudioStorage,
-    setAudio,
-    voiceType,
-    audio,
-    voicePrompt,
-    setVoicePrompt, }: GeneratePodcastProps) => {
+  const getPodcastAudio = useAction(api.openai.generateAudioAction)
 
-      const [isGenerating, setIsGenerating] = useState(false)
+  const generatePodcast = async () => {
+    setIsGenerating(true);
+
+    setAudio('');
+    if (!voicePrompt) {
+      return setIsGenerating(false);
+    }
+    try {
+       const response = await getPodcastAudio({
+         voice: voiceType,
+         input: voicePrompt
+       });
+    } catch (error) {
+      console.log('Error generating podcast');
+      // TODO: show error message
+
+      setIsGenerating(false);
+    }
+  };
+
+  return {
+    isGenerating,
+    generatePodcast // Corrected this line to use the right function name
+  };
+};
+
+const GeneratePodcast = ( props: GeneratePodcastProps) => {
+
+      const {isGenerating, generatePodcast} = useGeneratePodcast(props)
+  function setVoicePrompt(value: string): void {
+    throw new Error('Function not implemented.');
+  }
+
   return (
     <div>
       <div className='flex flex-col gap-2.5'>
@@ -27,7 +59,7 @@ const GeneratePodcast = ({
           className='input-class font-light focus-visible:ring-offset-orange-1'
           placeholder='Provide text to generate audio'
           rows={5}
-          value={voicePrompt}
+          value={props.voicePrompt}
           onChange={(e)=> setVoicePrompt(e.target.value)}
         />
       </div>
@@ -45,13 +77,13 @@ const GeneratePodcast = ({
                             )}
                 </Button>
       </div>
-      {audio &&(
+      {props.audio &&(
         <audio
         controls
-        src={audio}
+        src={props.audio}
         autoPlay
         className='mt-5'
-        onLoadedMetadata={(e)=> setAudioDuration(e.currentTarget.duration)}
+        onLoadedMetadata={(e)=> props.setAudioDuration(e.currentTarget.duration)}
         />
       )}
     </div>
