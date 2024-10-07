@@ -23,7 +23,7 @@ const useGeneratePodcast = ({
 
   const getPodcastAudio = useAction(api.openai.generateAudioAction)
 
-  const getAudioUrl = useMutation(api.podcasts.getUrl);
+  const getAudioUrl = useMutation(api.podcast.url);
 
   const generatePodcast = async () => {
     setIsGenerating(true);

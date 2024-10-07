@@ -27,21 +27,21 @@ import { cn } from "@/lib/utils"
 import { useState } from "react"
 import { Textarea } from "@/components/ui/textarea"
 import GeneratePodcast from "@/components/GeneratePodcast"
-
+import GenerateThumbnail from "@/components/GenerateThumbnail"
 import { Loader } from "lucide-react"
 import { Id } from "@/convex/_generated/dataModel"
 
 import { useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { useRouter } from "next/navigation"
-import GenerateThumbnail from "@/components/GenerateThumbnail"
+import React from "react"
 import { useToast } from "@/hooks/use-toast"
 
 const voiceCategories = ['alloy', 'shimmer', 'nova', 'echo', 'fable', 'onyx'];
 
 const formSchema = z.object({
-  podcastTitle: z.string().min(2, "Title must have at least 2 characters"),
-  podcastDescription: z.string().min(2, "Description must have at least 2 characters"),
+  podcastTitle: z.string().min(2),
+  podcastDescription: z.string().min(2),
 })
 
 const CreatePodcast = () => {
@@ -62,7 +62,7 @@ const CreatePodcast = () => {
   const createPodcast = useMutation(api.podcasts.createPodcast)
 
   const { toast } = useToast()
-
+  // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -74,12 +74,12 @@ const CreatePodcast = () => {
   async function onSubmit(data: z.infer<typeof formSchema>) {
     try {
       setIsSubmitting(true);
-      if (!audioUrl || !imageUrl || !voiceType) {
+      if(!audioUrl || !imageUrl || !voiceType) {
         toast({
           title: 'Please generate audio and image',
         })
         setIsSubmitting(false);
-        return;
+        throw new Error('Please generate audio and image')
       }
 
       const podcast = await createPodcast({
@@ -95,7 +95,6 @@ const CreatePodcast = () => {
         audioStorageId: audioStorageId!,
         imageStorageId: imageStorageId!,
       })
-
       toast({ title: 'Podcast created' })
       setIsSubmitting(false);
       router.push('/')
@@ -174,7 +173,7 @@ const CreatePodcast = () => {
               <GeneratePodcast 
                 setAudioStorageId={setAudioStorageId}
                 setAudio={setAudioUrl}
-                voiceType={voiceType ?? ''}
+                voiceType={voiceType!}
                 audio={audioUrl}
                 voicePrompt={voicePrompt}
                 setVoicePrompt={setVoicePrompt}
